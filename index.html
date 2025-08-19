@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Application Email Automation</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i data-feather="mail"></i> Email Automation System</h1>
+            <p>Automate personalized job application emails with AI assistance</p>
+        </div>
+        
+        <div id="mainContent" class="main-content">
+            <!-- Configuration Section -->
+            <div class="section">
+                <h2><i data-feather="settings"></i> Configuration</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="resumeType">Resume Type:</label>
+                        <select id="resumeType">
+                            <option value="software">Software Engineering</option>
+                            <option value="datascience">Data Science</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>AI & Email Setup:</label>
+                        <p class="config-note"><i data-feather="tool"></i> Configure AI and email providers in your <code>.env</code> file</p>
+                        <p class="config-note">Supported: Claude, OpenAI GPT, Google Gemini + Gmail, Outlook, ProtonMail</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="resumeSelection">Resume Selection:</label>
+                    <div class="resume-selection-container">
+                        <div class="resume-selector">
+                            <select id="resumeSelection">
+                                <option value="auto">Auto-detect based on job role</option>
+                                <option value="software">Software Engineering Resume</option>
+                                <option value="datascience">Data Science Resume</option>
+                                <option value="custom">Custom Resume (upload)</option>
+                                <option value="none">No Resume Attachment</option>
+                            </select>
+                        </div>
+                        <div id="customResumeUpload" class="custom-upload" style="display: none;">
+                            <input type="file" id="customResumeFile" accept=".pdf,.doc,.docx" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Resume Status:</label>
+                    <div id="resumeStatus" class="resume-status">
+                        <div class="resume-item">
+                            <span class="resume-label">Software Engineering:</span>
+                            <span id="softwareResumeStatus" class="resume-value">Not found</span>
+                        </div>
+                        <div class="resume-item">
+                            <span class="resume-label">Data Science:</span>
+                            <span id="dataScienceResumeStatus" class="resume-value">Not found</span>
+                        </div>
+                        <div class="resume-item selected-resume" id="selectedResumeStatus" style="display: none;">
+                            <span class="resume-label">Selected for emails:</span>
+                            <span id="selectedResumeValue" class="resume-value">None</span>
+                        </div>
+                    </div>
+                    <p class="resume-instructions"><i data-feather="folder"></i> Place your resumes in the <code>/resumes</code> folder:</p>
+                    <ul class="resume-instructions">
+                        <li><code>anudeep_swp.pdf</code> (Software Engineering)</li>
+                        <li><code>anudeep_dsp.pdf</code> (Data Science)</li>
+                        <li>Or upload a custom resume using the selector above</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Job Information Section -->
+            <div class="section">
+                <h2><i data-feather="briefcase"></i> Job Information</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="jobTitle">Job Title:</label>
+                        <input type="text" id="jobTitle" placeholder="e.g., Senior Data Scientist">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyName">Company Name:</label>
+                        <input type="text" id="companyName" placeholder="e.g., Google">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button id="detectRoleBtn" class="btn btn-secondary"><i data-feather="search"></i> Detect Role Type</button>
+                    <span id="detectedRole" class="detected-role"></span>
+                </div>
+            </div>
+
+            <!-- Recipients Section -->
+            <div class="section">
+                <h2><i data-feather="users"></i> Recipients</h2>
+                <p class="section-description">Choose one option to add recipients:</p>
+                
+                <div class="form-group">
+                    <label for="csvData"><i data-feather="file-text"></i> Option 1: Paste CSV Data (email, first_name, last_name, position):</label>
+                    <textarea id="csvData" rows="6" placeholder="email,first_name,last_name,position&#10;john.doe@example.com,John,Doe,Senior Data Scientist&#10;jane.smith@tech.com,Jane,Smith,ML Engineer"></textarea>
+                    <button id="parseCSVBtn" class="btn btn-secondary" style="margin-top: 10px;"><i data-feather="upload"></i> Parse CSV Data</button>
+                </div>
+                
+                <!-- Manual Entry Form -->
+                <div class="manual-entry-section">
+                    <h3><i data-feather="edit-3"></i> Option 2: Add Individual Contacts</h3>
+                    <div class="manual-entry-form">
+                        <div class="form-row">
+                            <div class="form-group-inline">
+                                <label for="manualEmail">Email:</label>
+                                <input type="email" id="manualEmail" placeholder="john.doe@company.com" class="form-input">
+                            </div>
+                            <div class="form-group-inline">
+                                <label for="manualFirstName">First Name:</label>
+                                <input type="text" id="manualFirstName" placeholder="John" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group-inline">
+                                <label for="manualLastName">Last Name:</label>
+                                <input type="text" id="manualLastName" placeholder="Doe" class="form-input">
+                            </div>
+                            <div class="form-group-inline">
+                                <label for="manualPosition">Position:</label>
+                                <input type="text" id="manualPosition" placeholder="Software Engineer" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="addManualEntry" class="btn btn-secondary">
+                                <i data-feather="plus"></i> Add Contact
+                            </button>
+                            <button type="button" id="clearManualForm" class="btn btn-outline">
+                                <i data-feather="trash-2"></i> Clear Form
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="recipientsPreview" class="recipients-preview"></div>
+            </div>
+
+            <!-- Draft Message Section -->
+            <div class="section">
+                <h2><i data-feather="edit-3"></i> Draft Message</h2>
+                <div class="draft-controls">
+                    <button id="loadDraftBtn" class="btn btn-secondary"><i data-feather="folder-open"></i> Load Saved Draft</button>
+                    <select id="savedDrafts" style="display: none;">
+                        <option value="">Select a saved draft...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="draftMessage">Initial Draft Message:</label>
+                    <textarea id="draftMessage" rows="6" placeholder="Enter your base message template here. Use placeholders: [Your name], [First Name], [Company Name], [Job Title], [Position]"></textarea>
+                    <p class="placeholder-help">Available placeholders: <code>[Your name]</code>, <code>[First Name]</code>, <code>[Company Name]</code>, <code>[Job Title]</code>, <code>[Position]</code></p>
+                </div>
+                <div class="draft-actions">
+                    <button id="saveDraftBtn" class="btn btn-success"><i data-feather="save"></i> Save Draft</button>
+                    <button id="craftVariationsBtn" class="btn btn-primary"><i data-feather="shuffle"></i> Craft AI Variations</button>
+                    <button id="addVariationBtn" class="btn btn-secondary"><i data-feather="plus"></i> Add Manual Variation</button>
+                    <button id="manageVariationsBtn" class="btn btn-outline" style="display: none;"><i data-feather="edit"></i> Manage Variations</button>
+                    <input type="text" id="draftName" placeholder="Draft name..." style="display: none;">
+                </div>
+                <div id="variationsStatus" class="variations-status" style="display: none;">
+                    <p><i data-feather="check-circle"></i> <span id="variationsCount">0</span> variations ready! (<span id="aiCount">0</span> AI + <span id="manualCount">0</span> manual)</p>
+                </div>
+            </div>
+
+            <!-- Email Template Section (Optional) -->
+            <div class="section" id="templateSection" style="display: none;">
+                <h2><i data-feather="file-text"></i> Email Template (Optional)</h2>
+                <div class="template-controls">
+                    <button id="showTemplateBtn" class="btn btn-outline"><i data-feather="eye"></i> Show Template Section</button>
+                    <button id="generateTemplateBtn" class="btn btn-primary" style="display: none;"><i data-feather="zap"></i> Generate New Template</button>
+                    <button id="loadTemplateBtn" class="btn btn-secondary" style="display: none;"><i data-feather="folder-open"></i> Load Saved Template</button>
+                    <select id="savedTemplates" style="display: none;">
+                        <option value="">Select a saved template...</option>
+                    </select>
+                </div>
+                <div class="form-group" id="templateFormGroup" style="display: none;">
+                    <label for="emailTemplate">Generated Email Template:</label>
+                    <textarea id="emailTemplate" rows="12" placeholder="Email template will appear here..."></textarea>
+                </div>
+                <div class="template-actions" id="templateActions" style="display: none;">
+                    <button id="saveTemplateBtn" class="btn btn-success"><i data-feather="save"></i> Save Template</button>
+                    <input type="text" id="templateName" placeholder="Template name..." style="display: none;">
+                </div>
+            </div>
+
+            <!-- Email Generation Section -->
+            <div class="section">
+                <h2><i data-feather="mail"></i> Configuration Status</h2>
+                <div id="configStatus" class="config-status">
+                    <div class="status-item">
+                        <span class="status-label">AI Provider:</span>
+                        <span id="aiStatus" class="status-value">Not configured</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">AI Type:</span>
+                        <span id="aiType" class="status-value">Claude</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Email Provider:</span>
+                        <span id="emailStatus" class="status-value">Not configured</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Email Type:</span>
+                        <span id="emailType" class="status-value">Gmail</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button id="sendEmailsBtn" class="btn btn-primary btn-large"><i data-feather="send"></i> Review & Send Emails</button>
+                    <p class="send-description">Review each personalized email before sending. Choose to send individually or schedule all at once.</p>
+                </div>
+                <div id="progress" class="progress-container" style="display: none;">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <div id="progressText" class="progress-text">Processing...</div>
+                </div>
+            </div>
+
+            <!-- Logs Section -->
+            <div class="section">
+                <h2><i data-feather="activity"></i> Activity Logs</h2>
+                <div id="logs" class="logs-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Variation Management Modal -->
+    <div id="variationModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i data-feather="edit-3"></i> Manage Message Variations</h3>
+                <button id="closeModalBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="variation-editor">
+                    <div class="editor-header">
+                        <label for="variationText">Add/Edit Variation:</label>
+                        <div class="editor-actions">
+                            <button id="saveVariationBtn" class="btn btn-success"><i data-feather="check"></i> Save</button>
+                            <button id="cancelEditBtn" class="btn btn-outline" style="display: none;"><i data-feather="x"></i> Cancel</button>
+                        </div>
+                    </div>
+                    <textarea id="variationText" rows="6" placeholder="Enter your message variation here. Use the same placeholders: [Your name], [First Name], [Company Name], [Job Title], [Position]"></textarea>
+                    <p class="variation-help">💡 Create variations that maintain the same tone and intent but use different wording</p>
+                </div>
+                
+                <div class="variations-list">
+                    <h4>Current Variations (<span id="modalVariationCount">0</span>)</h4>
+                    <div id="variationsList" class="variations-container">
+                        <!-- Variations will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+    </script>
+</body>
+</html>
